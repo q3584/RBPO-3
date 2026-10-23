@@ -1,48 +1,50 @@
 package com.javalab.lab1.Service;
 
-import org.springframework.stereotype.Service;
-import com.javalab.lab1.Entities.Crop;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.javalab.lab1.Entities.Crop;
+import com.javalab.lab1.Repository.CropRep;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class CropService 
 {
-    private final Map<Long, Crop> crops = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong(1);
+    private final CropRep cropRep;
+
+    public CropService(CropRep cropRep) {
+        this.cropRep = cropRep;
+    }
 
     public List<Crop> getAllCrops()
     {
-        return new ArrayList<>(crops.values());
+        return cropRep.findAll();
     }
 
-    public Crop getCropsbyId(Long id)
+    public Optional<Crop> getCropsbyId(Long id)
     {
-        return crops.get(id);
+        return cropRep.findById(id);
     }
 
-    public Crop postCrop(Crop crop)
-    {
-        Long id = idCount.getAndIncrement();
-        crop.setId(id);
-        crops.put(id, crop);
-        return crop;
+    public Crop createCrop(Crop crop) {
+        return cropRep.save(crop);
     }
 
-    public Crop patchCrop(Long id, Crop patchedCrop)
-    {
-        if (!crops.containsKey(id)) {return null;}
-        patchedCrop.setId(id);
-        crops.put(id, patchedCrop);
-        return patchedCrop;
+    public Crop updateCrop(Long id, Crop updatedCrop){
+        return cropRep.findById(id).map(crop -> {
+            crop.setName(updatedCrop.getName());
+            crop.setSeason(updatedCrop.getSeason());
+            crop.setReqSize(updatedCrop.getReqSize());
+            return cropRep.save(crop);
+        }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Культура не найдена"));
     }
-    
-    public void deleteCrop(Long id)
-    {
-        crops.remove(id);
+
+    public void deleteCrop(Long id) {
+        cropRep.deleteById(id);
     }
 }
 

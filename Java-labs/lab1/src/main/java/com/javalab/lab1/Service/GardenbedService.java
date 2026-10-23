@@ -1,58 +1,59 @@
 package com.javalab.lab1.Service;
 
-import org.springframework.stereotype.Service;
-import com.javalab.lab1.Entities.Gardenbed;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.javalab.lab1.Entities.Gardenbed;
+import com.javalab.lab1.Entities.User;
+import com.javalab.lab1.Repository.GardenbedRep;
+import com.javalab.lab1.Repository.UserRep;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class GardenbedService 
 {
-    private final Map<Long, Gardenbed> gardenbeds = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong(1);
-    private final UserService userService;
+    private final GardenbedRep gardenbedRep;
+    private final UserRep userRep;
 
-    public GardenbedService(UserService userService)
-    {
-        this.userService = userService;
+    public GardenbedService(GardenbedRep gardenbedRep, UserRep userRep) {
+        this.gardenbedRep = gardenbedRep;
+        this.userRep = userRep;
     }
 
     public List<Gardenbed> getAllGardenbeds()
     {
-        return new ArrayList<>(gardenbeds.values());
+        return gardenbedRep.findAll();
     }
 
-    public Gardenbed getGardenbedsbyId(Long id)
+    public Optional<Gardenbed> getGardenbedsbyId(Long id)
     {
-        return gardenbeds.get(id);
+        return gardenbedRep.findById(id);
     }
 
-    public Gardenbed postGardenbed(Gardenbed gardenbed)
-    {
-        if (gardenbed.getuserId() != null && userService.getUserbyId(gardenbed.getuserId()) == null)
-        {
-            throw new RuntimeException("User with id " + gardenbed.getuserId() + " not found");
+    public Gardenbed createGardenbed(Gardenbed gardenbed, Long userId) {
+        User owner = userRep.findById(userId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Владелец не найден"));
+
+        gardenbed.setOwner(owner);
+        if (gardenbed.getStatus() == null) {
+            gardenbed.setStatus(true);
         }
-        Long id = idCount.getAndIncrement();
-        gardenbed.setId(id);
-        gardenbeds.put(id, gardenbed);
-        return gardenbed;
+        return gardenbedRep.save(gardenbed);
     }
 
-    public Gardenbed patchGardenbed(Long id, Gardenbed patchedGardenbed)
-    {
-        if (!gardenbeds.containsKey(id)) {return null;}
-        patchedGardenbed.setId(id);
-        gardenbeds.put(id, patchedGardenbed);
-        return patchedGardenbed;
+    public Gardenbed updateGardenbed(Long id, Gardenbed updatedBed){
+        return gardenbedRep.findById(id).map(bed -> {
+            bed.setArea(updatedBed.getArea());
+            bed.setStatus(updatedBed.getStatus());
+            return gardenbedRep.save(bed);
+        }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Грядка не найдена"));
     }
-    
-    public void deleteGardenbed(Long id)
-    {
-        gardenbeds.remove(id);
+
+    public void deleteGardenbed(Long id) {
+        gardenbedRep.deleteById(id);
     }
 }
 

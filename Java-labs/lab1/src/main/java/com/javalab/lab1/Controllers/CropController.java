@@ -1,6 +1,5 @@
 package com.javalab.lab1.Controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,39 +18,28 @@ public class CropController
     }
 
     @GetMapping
-    public ResponseEntity<List<Crop>> getAllCrops()
+    public List<Crop> getAllCrops()
     {
-        return ResponseEntity.ok(cropService.getAllCrops());
+        return cropService.getAllCrops();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Crop> getCropbyId(@PathVariable Long id)
     {
-        Crop crop = cropService.getCropsbyId(id);
-        if (crop == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(crop);
+        return cropService.getCropsbyId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     
     @PostMapping
-    public ResponseEntity<Crop> postCrop(@RequestBody Crop crop) {
-        Crop createdCrop = cropService.postCrop(crop);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCrop);
+    public Crop createCrop(@RequestBody Crop crop) {
+        return cropService.createCrop(crop);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Crop> patchCrop(@PathVariable Long id, @RequestBody Crop crop)
+    public Crop updateCrop(@PathVariable Long id, @RequestBody Crop crop)
     {
-        Crop patchedCrop = cropService.patchCrop(id, crop);
-        if (patchedCrop == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(patchedCrop);
+        return cropService.updateCrop(id, crop);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCrop(@PathVariable Long id) {
         cropService.deleteCrop(id);

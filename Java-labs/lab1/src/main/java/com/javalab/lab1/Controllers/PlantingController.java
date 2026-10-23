@@ -1,11 +1,11 @@
 package com.javalab.lab1.Controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.javalab.lab1.Entities.Planting;
 import com.javalab.lab1.Service.PlantingService;
+import com.javalab.lab1.Service.GardenBusinessService;
 import java.util.List;
 
 @RestController
@@ -13,43 +13,35 @@ import java.util.List;
 public class PlantingController 
 {
     private final PlantingService plantingService;
-    public PlantingController(PlantingService plantingService)
+    private final GardenBusinessService gardenBusinessService;
+    public PlantingController(PlantingService plantingService, GardenBusinessService gardenBusinessService)
     {
         this.plantingService = plantingService;
+        this.gardenBusinessService = gardenBusinessService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Planting>> getAllPlantings()
+    public List<Planting> getAllPlantings()
     {
-        return ResponseEntity.ok(plantingService.getAllPlantings());
+        return plantingService.getAllPlantings();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Planting> getPlantingbyId(@PathVariable Long id)
     {
-        Planting planting = plantingService.getPlantingsbyId(id);
-        if (planting == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(planting);
+        return plantingService.getPlantingById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     
     @PostMapping
-    public ResponseEntity<Planting> postPlanting(@RequestBody Planting planting) {
-        Planting createdPlanting = plantingService.postPlanting(planting);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPlanting);
+    public Planting createPlanting(@RequestParam Long gardenbedId, @RequestParam Long cropId, @RequestParam int Plantnum)
+    {
+        return gardenBusinessService.createPlantingWithAreaCheck(gardenbedId, cropId, Plantnum);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Planting> patchPlanting(@PathVariable Long id, @RequestBody Planting planting)
+    public Planting updatePlanting(@PathVariable Long id, @RequestBody Planting planting)
     {
-        Planting patchedPlanting = plantingService.patchPlanting(id, planting);
-        if (patchedPlanting == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(patchedPlanting);
+        return plantingService.updatePlanting(id, planting);
     }
 
     @DeleteMapping("/{id}")

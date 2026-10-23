@@ -1,11 +1,12 @@
 package com.javalab.lab1.Controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.javalab.lab1.Entities.Harvest;
+import com.javalab.lab1.Service.GardenBusinessService;
 import com.javalab.lab1.Service.HarvestService;
+
 import java.util.List;
 
 @RestController
@@ -13,43 +14,35 @@ import java.util.List;
 public class HarvestController 
 {
     private final HarvestService harvestService;
-    public HarvestController(HarvestService harvestService)
+    private final GardenBusinessService gardenBusinessService;
+    public HarvestController(HarvestService harvestService, GardenBusinessService gardenBusinessService)
     {
         this.harvestService = harvestService;
+        this.gardenBusinessService = gardenBusinessService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Harvest>> getAllHarvests()
+    public List<Harvest> getAllHarvests()
     {
-        return ResponseEntity.ok(harvestService.getAllHarvests());
+        return harvestService.getAllHarvests();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Harvest> getHarvestbyId(@PathVariable Long id)
     {
-        Harvest harvest = harvestService.getHarvestsbyId(id);
-        if (harvest == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(harvest);
+        return harvestService.getHarvestById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     
     @PostMapping
-    public ResponseEntity<Harvest> postHarvest(@RequestBody Harvest harvest) {
-        Harvest createdHarvest = harvestService.postHarvest(harvest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdHarvest);
+    public Harvest registerHarvest(@RequestParam Long plantingId, @RequestParam Double mass)
+    {
+        return gardenBusinessService.registerHarvest(plantingId, mass);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Harvest> patchHarvest(@PathVariable Long id, @RequestBody Harvest harvest)
+    public Harvest updateHarvest(@PathVariable Long id, @RequestBody Harvest harvest)
     {
-        Harvest patchedHarvest = harvestService.patchHarvest(id, harvest);
-        if (patchedHarvest == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(patchedHarvest);
+        return harvestService.updateHarvest(id, harvest);
     }
 
     @DeleteMapping("/{id}")

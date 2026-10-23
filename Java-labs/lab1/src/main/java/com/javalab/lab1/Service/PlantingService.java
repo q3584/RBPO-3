@@ -1,64 +1,76 @@
 package com.javalab.lab1.Service;
 
-import org.springframework.stereotype.Service;
-import com.javalab.lab1.Entities.Planting;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.javalab.lab1.Entities.Planting;
+import com.javalab.lab1.Repository.CropRep;
+import com.javalab.lab1.Repository.GardenbedRep;
+import com.javalab.lab1.Repository.PlantingRep;
+import com.javalab.lab1.Entities.Gardenbed;
+import com.javalab.lab1.Entities.Crop;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
-public class PlantingService 
-{
-    private final Map<Long, Planting> plantings = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong(1);
-    private final GardenbedService gardenbedService;
-    private final CropService cropService;
+public class PlantingService {
 
-    public PlantingService(GardenbedService gardenbedService, CropService cropService)
-    {
-        this.gardenbedService = gardenbedService;
-        this.cropService = cropService;
+    private final PlantingRep plantingRep;
+    private final GardenbedRep gardenbedRep;
+    private final CropRep cropRep;
+
+    public PlantingService(PlantingRep plantingRep, GardenbedRep gardenbedRep, CropRep cropRep) {
+        this.plantingRep = plantingRep;
+        this.gardenbedRep = gardenbedRep;
+        this.cropRep = cropRep;
     }
 
-    public List<Planting> getAllPlantings()
-    {
-        return new ArrayList<>(plantings.values());
+    public List<Planting> getAllPlantings() {
+        return plantingRep.findAll();
     }
 
-    public Planting getPlantingsbyId(Long id)
-    {
-        return plantings.get(id);
+    public Optional<Planting> getPlantingById(Long id) {
+        return plantingRep.findById(id);
     }
 
-    public Planting postPlanting(Planting planting)
-    {
-       if (gardenbedService.getGardenbedsbyId(planting.getGardenbedId()) == null) {
-            throw new RuntimeException("GardenBed with id " + planting.getGardenbedId() + " not found!");
+    public Planting createPlanting(Long gardenbedId, Long cropId, Integer plantnum, String status) {
+        Gardenbed bed = gardenbedRep.findById(gardenbedId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Грядка не найдена"));
+        
+        Crop crop = cropRep.findById(cropId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Культура не найдена"));
+
+        Planting planting = new Planting();
+        planting.setGardenbed(bed);
+        planting.setCrop(crop);
+        planting.setPlantnum(plantnum);
+        planting.setStatus(status != null ? status : "ACTIVE");
+
+        return plantingRep.save(planting);
+    }
+
+    public Planting updatePlanting(Long id, Planting updatedPlanting) {
+    return plantingRep.findById(id).map(planting -> {
+        planting.setPlantnum(updatedPlanting.getPlantnum());
+        planting.setStatus(updatedPlanting.getStatus());
+        
+            if (updatedPlanting.getGardenbed() != null) {
+            planting.setGardenbed(updatedPlanting.getGardenbed());
         }
-
-        if (cropService.getCropsbyId(planting.GetCropId()) == null) {
-            throw new RuntimeException("Crop with id " + planting.GetCropId() + " not found!");
+        if (updatedPlanting.getCrop() != null) {
+            planting.setCrop(updatedPlanting.getCrop());
         }
-        Long id = idCount.getAndIncrement();
-        planting.setId(id);
-        plantings.put(id, planting);
-        return planting;
-    }
+        
+        return plantingRep.save(planting);
+    }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Посадка не найдена"));
+}
 
-    public Planting patchPlanting(Long id, Planting patchedPlanting)
-    {
-        if (!plantings.containsKey(id)) {return null;}
-        patchedPlanting.setId(id);
-        plantings.put(id, patchedPlanting);
-        return patchedPlanting;
-    }
-    
-    public void deletePlanting(Long id)
-    {
-        plantings.remove(id);
+
+    public void deletePlanting(Long id) {
+        plantingRep.deleteById(id);
     }
 }
+
 
 

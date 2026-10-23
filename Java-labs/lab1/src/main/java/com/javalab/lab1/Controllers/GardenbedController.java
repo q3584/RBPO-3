@@ -1,6 +1,5 @@
 package com.javalab.lab1.Controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,39 +18,29 @@ public class GardenbedController
     }
 
     @GetMapping
-    public ResponseEntity<List<Gardenbed>> getAllGardenbeds()
+    public List<Gardenbed> getAllGardenbeds()
     {
-        return ResponseEntity.ok(gardenbedService.getAllGardenbeds());
+        return gardenbedService.getAllGardenbeds();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Gardenbed> getGardenbedbyId(@PathVariable Long id)
     {
-        Gardenbed gardenbed = gardenbedService.getGardenbedsbyId(id);
-        if (gardenbed == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(gardenbed);
+        return gardenbedService.getGardenbedsbyId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     
     @PostMapping
-    public ResponseEntity<Gardenbed> postGardenbed(@RequestBody Gardenbed gardenbed) {
-        Gardenbed createdGardenbed = gardenbedService.postGardenbed(gardenbed);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdGardenbed);
+    public Gardenbed createGardenbed(@RequestBody Gardenbed gardenbed, @RequestParam Long userId)
+    {
+        return gardenbedService.createGardenbed(gardenbed, userId);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Gardenbed> patchGardenbed(@PathVariable Long id, @RequestBody Gardenbed gardenbed)
+    public Gardenbed updateGardenbed(@PathVariable Long id, @RequestBody Gardenbed gardenbed)
     {
-        Gardenbed patchedGardenbed = gardenbedService.patchGardenbed(id, gardenbed);
-        if (patchedGardenbed == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(patchedGardenbed);
+        return gardenbedService.updateGardenbed(id, gardenbed);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGardenbed(@PathVariable Long id) {
         gardenbedService.deleteGardenbed(id);

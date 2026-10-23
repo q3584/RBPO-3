@@ -1,57 +1,59 @@
 package com.javalab.lab1.Service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.javalab.lab1.Entities.Harvest;
-import java.util.ArrayList;
+import com.javalab.lab1.Entities.Planting;
+import com.javalab.lab1.Repository.HarvestRep;
+import com.javalab.lab1.Repository.PlantingRep;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
+import java.time.LocalDate;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
 
 @Service
 public class HarvestService
 {
-    private final Map<Long, Harvest> harvests = new HashMap<>();
-    private final AtomicLong idCount = new AtomicLong(1);
-    private final PlantingService plantingService;
+    private final HarvestRep harvestRep;
+    private final PlantingRep plantingRep;
 
-    public HarvestService(PlantingService plantingService)
-    {
-        this.plantingService = plantingService;
+    public HarvestService(HarvestRep harvestRep, PlantingRep plantingRep) {
+        this.harvestRep = harvestRep;
+        this.plantingRep = plantingRep;
     }
 
-    public List<Harvest> getAllHarvests()
-    {
-        return new ArrayList<>(harvests.values());
+    public List<Harvest> getAllHarvests() {
+        return harvestRep.findAll();
     }
 
-    public Harvest getHarvestsbyId(Long id)
-    {
-        return harvests.get(id);
+    public Optional<Harvest> getHarvestById(Long id) {
+        return harvestRep.findById(id);
     }
 
-    public Harvest postHarvest(Harvest harvest)
-    {
-        if (harvest.getplantingId() != null && plantingService.getPlantingsbyId(harvest.getplantingId()) == null)
-        {
-            throw new RuntimeException("User with id " + harvest.getplantingId() + " not found");
-        }
-        Long id = idCount.getAndIncrement();
-        harvest.setId(id);
-        harvests.put(id, harvest);
-        return harvest;
+    public Harvest createHarvest(Long plantingId, Double mass) {
+        Planting planting = plantingRep.findById(plantingId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Посадка не найдена"));
+
+        Harvest harvest = new Harvest();
+        harvest.setPlanting(planting);
+        harvest.setMass(mass);
+        
+        harvest.setDate(LocalDate.now());
+        return harvestRep.save(harvest);
     }
 
-    public Harvest patchHarvest(Long id, Harvest patchedHarvest)
-    {
-        if (!harvests.containsKey(id)) {return null;}
-        patchedHarvest.setId(id);
-        harvests.put(id, patchedHarvest);
-        return patchedHarvest;
-    }
-    
-    public void deleteHarvest(Long id)
-    {
-        harvests.remove(id);
+    public Harvest updateHarvest(Long id, Harvest updatedHarvest) {
+    return harvestRep.findById(id).map(harvest -> {
+        harvest.setMass(updatedHarvest.getMass());
+        return harvestRep.save(harvest);
+    }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Запись о сборе не найдена"));
+}
+
+
+    public void deleteHarvest(Long id) {
+        harvestRep.deleteById(id);
     }
 }
+

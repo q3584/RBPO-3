@@ -1,6 +1,5 @@
 package com.javalab.lab1.Controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.javalab.lab1.Entities.User;
@@ -18,39 +17,28 @@ public class UserController
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers()
+    public List<User> getAllUsers()
     {
-        return ResponseEntity.ok(userService.getAllUsers());
+        return userService.getallUsers();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserbyId(@PathVariable Long id)
     {
-        User user = userService.getUserbyId(id);
-        if (user == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(user);
+        return userService.getUserByID(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     
     @PostMapping
-    public ResponseEntity<User> postUser(@RequestBody User user) {
-        User createdUser = userService.postUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    public User createUser(@RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<User> patchUser(@PathVariable Long id, @RequestBody User user)
+    public User updateUser(@PathVariable Long id, @RequestBody User user)
     {
-        User patchedUser = userService.patchUser(id, user);
-        if (patchedUser == null)
-        {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(patchedUser);
+        return userService.updUser(id, user);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
