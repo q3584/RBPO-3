@@ -18,7 +18,7 @@ public class Gardenbed
     @Column(nullable = false)
     private double area;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user", nullable = false)
     private User owner;
     @Column(nullable = false)
     private Boolean status = true;
