@@ -17,12 +17,15 @@ public class  Harvest
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false)
     private LocalDate date;
+
     @Column(nullable = false)
     private Double mass;
-    @ManyToOne
-    @JoinColumn(name = "planting", nullable = false)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plantingID", nullable = false)
     private Planting planting;
 
 }

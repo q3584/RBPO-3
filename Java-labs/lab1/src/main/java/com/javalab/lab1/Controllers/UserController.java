@@ -42,7 +42,7 @@ public class UserController
             user.setRole((String) request.get("role"));
 
             String password = (String) request.get("password");
-            User createdUser = userService.creatUser(user, password);
+            User createdUser = userService.createUser(user, password);
             return ResponseEntity.ok(createdUser);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

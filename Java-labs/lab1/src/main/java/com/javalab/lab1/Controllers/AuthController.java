@@ -1,15 +1,17 @@
 package com.javalab.lab1.Controllers;
-import com.javalab.lab1.DTO.RegRequest;
-import com.javalab.lab1.DTO.RegResponse;
-import com.javalab.lab1.Entities.User;
+import com.javalab.lab1.DTO.TokenResponse;
+import com.javalab.lab1.DTO.Reg.RegRequest;
+import com.javalab.lab1.DTO.LoginRequest;
+import com.javalab.lab1.DTO.RefreshRequest;
 import com.javalab.lab1.Service.AuthService;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController 
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
 
@@ -19,21 +21,25 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegResponse> register(@RequestBody RegRequest request)
+    public ResponseEntity<TokenResponse> register(@RequestBody RegRequest request, @RequestHeader(value = "X-Device-Id", required = false) String deviceId)
     {
-    User user = authService.registerUser(
-        request.name(),
-        request.email(),
-        request.password()
-    );
+        TokenResponse response = authService.registerUser(request.name(), request.email(), request.password(), deviceId);
+        return ResponseEntity.status(HttpStatus.CREATED).header(HttpHeaders.AUTHORIZATION, "Bearer " + response.accessToken()).body(response);
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request, @RequestHeader(value = "X-Device-Id", required = false) String deviceId)
+    {
+        TokenResponse response = authService.loginUser(request.email(), request.password(), deviceId);
+        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + response.accessToken()).body(response);
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(@RequestBody RefreshRequest request)
+    {
+        TokenResponse response = authService.refreshToken(request.refreshToken());
+        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, "Bearer " + response.accessToken()).body(response);
+    }
+}
 
-    RegResponse response = new RegResponse(
-        user.getId(),
-        user.getName(),
-        user.getEmail(),
-        user.getRole()
-    );
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
-}
-}
 

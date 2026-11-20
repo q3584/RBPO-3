@@ -11,6 +11,8 @@ import com.javalab.lab1.Repository.CropRep;
 import com.javalab.lab1.Repository.GardenbedRep;
 import com.javalab.lab1.Repository.PlantingRep;
 import com.javalab.lab1.Entities.Gardenbed;
+import com.javalab.lab1.DTO.Planting.PlantingRequest;
+import com.javalab.lab1.DTO.Planting.PlantingResponse;
 import com.javalab.lab1.Entities.Crop;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -28,6 +30,11 @@ public class PlantingService {
         this.cropRep = cropRep;
     }
 
+    private PlantingResponse toResponse(Planting planting)
+    {
+        return new PlantingResponse(planting.getId(),planting.getGardenbed().getId(),planting.getCrop().getId(),planting.getPlantnum(),planting.getStatus());
+    }
+
     public List<Planting> getAllPlantings() {
         return plantingRep.findAll();
     }
@@ -36,34 +43,31 @@ public class PlantingService {
         return plantingRep.findById(id);
     }
 
-    public Planting createPlanting(Long gardenbedId, Long cropId, Integer plantnum, String status) {
-        Gardenbed bed = gardenbedRep.findById(gardenbedId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Грядка не найдена"));
+    public PlantingResponse createPlanting(PlantingRequest request) {
+        Gardenbed gardenbed = gardenbedRep.findById(request.gardenbedID()).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Gardenbed not found"));
         
-        Crop crop = cropRep.findById(cropId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Культура не найдена"));
+        Crop crop = cropRep.findById(request.cropID()).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Crop not found"));
 
         Planting planting = new Planting();
-        planting.setGardenbed(bed);
+        planting.setGardenbed(gardenbed);
         planting.setCrop(crop);
-        planting.setPlantnum(plantnum);
-        planting.setStatus(status != null ? status : "ACTIVE");
+        planting.setPlantnum(request.plantnum());
+        planting.setStatus(request.status());
 
-        return plantingRep.save(planting);
+        return toResponse(plantingRep.save(planting));
     }
 
-    public Planting updatePlanting(Long id, Planting updatedPlanting) {
-    return plantingRep.findById(id).map(planting -> {
-        planting.setPlantnum(updatedPlanting.getPlantnum());
-        planting.setStatus(updatedPlanting.getStatus());
-        
-            if (updatedPlanting.getGardenbed() != null) {
-            planting.setGardenbed(updatedPlanting.getGardenbed());
-        }
-        if (updatedPlanting.getCrop() != null) {
-            planting.setCrop(updatedPlanting.getCrop());
-        }
-        
-        return plantingRep.save(planting);
-    }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Посадка не найдена"));
+    public PlantingResponse updatePlanting(Long id, PlantingRequest request) {
+    Planting planting = plantingRep.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Planting not found"));
+    Gardenbed gardenbed = gardenbedRep.findById(request.gardenbedID()).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Gardenbed not found"));
+    Crop crop = cropRep.findById(request.cropID()).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Crop not found"));
+    
+    planting.setGardenbed(gardenbed);
+    planting.setCrop(crop);
+    planting.setPlantnum(request.plantnum());
+    planting.setStatus(request.status());
+
+    return toResponse(plantingRep.save(planting));
 }
 
 

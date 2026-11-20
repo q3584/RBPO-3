@@ -4,6 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.javalab.lab1.DTO.Planting.PlantingRequest;
+import com.javalab.lab1.DTO.Planting.PlantingResponse;
 import com.javalab.lab1.Entities.Planting;
 import com.javalab.lab1.Service.PlantingService;
 import com.javalab.lab1.Service.GardenBusinessService;
@@ -22,14 +24,14 @@ public class PlantingController
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public List<Planting> getAllPlantings()
     {
         return plantingService.getAllPlantings();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public ResponseEntity<Planting> getPlantingbyId(@PathVariable Long id)
     {
         return plantingService.getPlantingById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -37,16 +39,16 @@ public class PlantingController
     
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Planting createPlanting(@RequestParam Long gardenbedId, @RequestParam Long cropId, @RequestParam int Plantnum)
+    public Planting createPlanting(@RequestBody Long gardenbedId, @RequestBody Long cropId, @RequestBody int Plantnum, @RequestBody String status)
     {
-        return gardenBusinessService.createPlantingWithAreaCheck(gardenbedId, cropId, Plantnum);
+        return gardenBusinessService.createPlantingWithAreaCheck(gardenbedId, cropId, Plantnum, status);
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Planting updatePlanting(@PathVariable Long id, @RequestBody Planting planting)
+    public ResponseEntity<PlantingResponse> updatePlanting(@PathVariable Long id, @RequestBody PlantingRequest request)
     {
-        return plantingService.updatePlanting(id, planting);
+        return ResponseEntity.ok(plantingService.updatePlanting(id, request));
     }
 
     @DeleteMapping("/{id}")

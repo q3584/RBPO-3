@@ -27,4 +27,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(Map.of("error","Internal Server Error", "message", "Internal server error."));
     }
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<String> handleInvalidCredentials(InvalidCredentialsException ex)
+    {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+    @ExceptionHandler(InvalidRefreshToken.class)
+    public ResponseEntity<String> handleInvalidRefreshToken(InvalidRefreshToken ex)
+    {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+    @ExceptionHandler(UserAlreadyExists.class)
+    public ResponseEntity<String> handleUserAlreadyExists(UserAlreadyExists ex)
+    {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }

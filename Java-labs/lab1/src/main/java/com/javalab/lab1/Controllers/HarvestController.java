@@ -4,6 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.javalab.lab1.DTO.Harvest.HarvestRequest;
+import com.javalab.lab1.DTO.Harvest.HarvestResponse;
 import com.javalab.lab1.Entities.Harvest;
 import com.javalab.lab1.Service.GardenBusinessService;
 import com.javalab.lab1.Service.HarvestService;
@@ -23,14 +25,14 @@ public class HarvestController
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public List<Harvest> getAllHarvests()
     {
         return harvestService.getAllHarvests();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public ResponseEntity<Harvest> getHarvestbyId(@PathVariable Long id)
     {
         return harvestService.getHarvestById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -38,16 +40,16 @@ public class HarvestController
     
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Harvest registerHarvest(@RequestParam Long plantingId, @RequestParam Double mass)
+    public Harvest registerHarvest(@RequestBody Long plantingId, @RequestBody Double mass)
     {
         return gardenBusinessService.registerHarvest(plantingId, mass);
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Harvest updateHarvest(@PathVariable Long id, @RequestBody Harvest harvest)
+    public ResponseEntity<HarvestResponse> updateHarvest(@PathVariable Long id, @RequestBody HarvestRequest request)
     {
-        return harvestService.updateHarvest(id, harvest);
+        return ResponseEntity.ok(harvestService.updateHarvest(id, request));
     }
 
     @DeleteMapping("/{id}")

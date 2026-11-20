@@ -1,8 +1,12 @@
 package com.javalab.lab1.Controllers;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import com.javalab.lab1.DTO.Crop.CropRequest;
+import com.javalab.lab1.DTO.Crop.CropResponse;
 import com.javalab.lab1.Entities.Crop;
 import com.javalab.lab1.Service.CropService;
 import java.util.List;
@@ -18,14 +22,14 @@ public class CropController
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public List<Crop> getAllCrops()
     {
         return cropService.getAllCrops();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') and hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public ResponseEntity<Crop> getCropbyId(@PathVariable Long id)
     {
         return cropService.getCropsbyId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -33,15 +37,15 @@ public class CropController
     
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Crop createCrop(@RequestBody Crop crop) {
-        return cropService.createCrop(crop);
+    public ResponseEntity<CropResponse> createCrop(@RequestBody CropRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.createCrop(request));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Crop updateCrop(@PathVariable Long id, @RequestBody Crop crop)
+    public ResponseEntity<CropResponse> updateCrop(@PathVariable Long id, @RequestBody CropRequest request)
     {
-        return cropService.updateCrop(id, crop);
+        return ResponseEntity.ok(cropService.updateCrop(id, request));
     }
     
     @DeleteMapping("/{id}")

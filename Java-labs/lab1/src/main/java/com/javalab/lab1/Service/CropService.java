@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.javalab.lab1.DTO.Crop.CropRequest;
+import com.javalab.lab1.DTO.Crop.CropResponse;
 import com.javalab.lab1.Entities.Crop;
 import com.javalab.lab1.Repository.CropRep;
 
@@ -20,6 +22,11 @@ public class CropService
         this.cropRep = cropRep;
     }
 
+    private CropResponse toResponse(Crop crop)
+    {
+        return new CropResponse(crop.getId(),crop.getName(),crop.getSeason(),crop.getReqSize());
+    }
+
     public List<Crop> getAllCrops()
     {
         return cropRep.findAll();
@@ -30,17 +37,20 @@ public class CropService
         return cropRep.findById(id);
     }
 
-    public Crop createCrop(Crop crop) {
-        return cropRep.save(crop);
+    public CropResponse createCrop(CropRequest request) {
+        Crop crop = new Crop();
+        crop.setName(request.name());
+        crop.setSeason(request.season());
+        crop.setReqSize(request.reqSize());
+        return toResponse(cropRep.save(crop));
     }
 
-    public Crop updateCrop(Long id, Crop updatedCrop){
-        return cropRep.findById(id).map(crop -> {
-            crop.setName(updatedCrop.getName());
-            crop.setSeason(updatedCrop.getSeason());
-            crop.setReqSize(updatedCrop.getReqSize());
-            return cropRep.save(crop);
-        }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Культура не найдена"));
+    public CropResponse updateCrop(Long id, CropRequest request){
+        Crop crop = cropRep.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Crop not found"));
+        crop.setName(request.name());
+        crop.setSeason(request.season());
+        crop.setReqSize(request.reqSize());
+        return toResponse(cropRep.save(crop));
     }
 
     public void deleteCrop(Long id) {

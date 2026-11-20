@@ -22,7 +22,11 @@ public class UserService{
     public User getUserByID(Long id){
         return userRep.findById(id).orElseThrow(()-> new IllegalArgumentException("User with ID " + id + " not found."));
     }
-    public User creatUser(User user, String rawPassword){
+    public User getUserByEmail(String email)
+    {
+        return userRep.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+    }
+    public User createUser(User user, String rawPassword){
         if (userRep.findByEmail(user.getEmail()).isPresent()){
             throw new IllegalArgumentException("User with such email is already exists");
         }

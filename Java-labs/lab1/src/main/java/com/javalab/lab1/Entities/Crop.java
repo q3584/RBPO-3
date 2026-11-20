@@ -1,4 +1,7 @@
 package com.javalab.lab1.Entities;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,11 +17,16 @@ public class Crop
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false, unique = true)
     private String name;
+
     @Column(nullable = false)
     private String season;
-    @Column(nullable = false)
-    private Integer reqSize;
 
+    @Column(nullable = false)
+    private Double reqSize;
+
+    @OneToMany(mappedBy = "crop")
+    private List<Planting> plantings = new ArrayList<>();
 }

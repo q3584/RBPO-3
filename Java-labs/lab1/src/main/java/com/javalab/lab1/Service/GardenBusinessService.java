@@ -28,11 +28,11 @@ public class GardenBusinessService {
     }
 
     @Transactional
-    public Planting createPlantingWithAreaCheck(Long gardenbedId, Long cropId, int plantnum) {
+    public Planting createPlantingWithAreaCheck(Long gardenbedId, Long cropId, int plantnum, String status) {
         Gardenbed bed = gardenbedRep.findById(gardenbedId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Грядка не найдена"));
         Crop crop = cropRep.findById(cropId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Культура не найдена"));
 
-        if (!bed.getStatus()) {throw new IllegalStateException("Грядка занята или недоступна для посадки.");}
+        if (!bed.getAvailable()) {throw new IllegalStateException("Грядка занята или недоступна для посадки.");}
 
         double requiredArea = plantnum * crop.getReqSize();
         if (requiredArea > bed.getArea()) {
@@ -43,9 +43,9 @@ public class GardenBusinessService {
         planting.setGardenbed(bed);
         planting.setCrop(crop);
         planting.setPlantnum(plantnum);
-        planting.setStatus("ACTIVE");
+        planting.setStatus(status);
 
-        bed.setStatus(false);
+        bed.setAvailable(false);
         gardenbedRep.save(bed);
 
         return plantingRep.save(planting);
@@ -68,7 +68,7 @@ public class GardenBusinessService {
         plantingRep.save(planting);
 
         Gardenbed bed = planting.getGardenbed();
-        bed.setStatus(true);
+        bed.setAvailable(true);
         gardenbedRep.save(bed);
 
         return harvestRep.save(harvest);
@@ -79,8 +79,8 @@ public class GardenBusinessService {
         List<Gardenbed> beds = gardenbedRep.findAll();
         int count = 0;
         for (Gardenbed bed : beds) {
-            if (bed.getOwner().getId().equals(userId) && bed.getStatus()) {
-                bed.setStatus(false);
+            if (bed.getOwner().getId().equals(userId) && bed.getAvailable()) {
+                bed.setAvailable(false);
                 gardenbedRep.save(bed);
                 count++;
             }

@@ -1,4 +1,7 @@
 package com.javalab.lab1.Entities;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +16,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToMany(mappedBy = "owner")
+    private List<Gardenbed> gardenbeds = new ArrayList<>();
+    
     @Column(nullable = false)
     private String name;
 
